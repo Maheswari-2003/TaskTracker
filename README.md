@@ -1,1 +1,1 @@
-# TaskTracker
+This Task Tracker Application is a Spring Boot-based project designed to facilitate the management of user tasks, deadlines, and statuses. With features like creating, updating, and deleting tasks, users can assign tasks to specific users and monitor their status and due dates effectively.The application exposes several endpoints, including /api/getalltasks to retrieve all tasks, /api/gettasksbyuserid/{userId} for fetching tasks by user ID, /api/saveuser/{userId} to create a new task for a user, and /api/{taskId} for updating or deleting tasks by ID.
