@@ -1,17 +1,23 @@
-package com.example.tasktrackerapplication.controller;
+package com.example.tasktrackerapp.controller;
 
-import com.example.tasktrackerapplication.dto.UserDTO;
 
-import com.example.tasktrackerapplication.service.UserService;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+
+
+import com.example.tasktrackerapp.dto.AuthRequest;
+import com.example.tasktrackerapp.dto.UserDTO;
+import com.example.tasktrackerapp.entity.JwtUtil;
+import com.example.tasktrackerapp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @RestController
@@ -33,14 +39,32 @@ public class UserController {
         UserDTO savedUser = userService.saveUser(userDTO);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
-    @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestParam String username, @RequestParam String password) {
-        return userService.authenticateUser(username, password);
+    //
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    @GetMapping("/")
+    public String welcome() {
+        return "Welcome to Mahes Tech (one of the best developer in the world)!!";
     }
 
+    @PostMapping("/authenticate")
+    public ResponseEntity<Map<String, String>> generateToken(@RequestBody AuthRequest authRequest) throws Exception {
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
+        } catch (Exception ex) {
+            throw new Exception("Invalid username/password");
+        }
 
+        String token = jwtUtil.generateToken(authRequest.getUsername());
 
-}
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
 
-
-
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
