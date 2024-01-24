@@ -48,7 +48,7 @@ public class UserController {
 
     @GetMapping("/")
     public String welcome() {
-        return "Welcome to Mahes Tech (one of the best developer in the world)!!";
+        return "Welcome all";
     }
 
     @PostMapping("/authenticate")
