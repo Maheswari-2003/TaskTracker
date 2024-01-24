@@ -1,10 +1,9 @@
-package com.example.tasktrackerapplication.service;
+package com.example.tasktrackerapp.service;
 
 
-import com.example.tasktrackerapplication.dto.UserDTO;
-import com.example.tasktrackerapplication.entity.JwtUtil;
-import com.example.tasktrackerapplication.entity.Users;
-import com.example.tasktrackerapplication.repositories.UserRepository;
+import com.example.tasktrackerapp.dto.UserDTO;
+import com.example.tasktrackerapp.entity.Users;
+import com.example.tasktrackerapp.repository.UserRepository;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.sql.DataSource;
@@ -21,7 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
@@ -68,31 +70,10 @@ public class UserService {
         return convertToDTO(savedUser);
     }
 
-
-    private final AuthenticationManager authenticationManager;
-    private final JwtUtil jwtUtil;
-    private final DataSource dataSource;
-
-    @Autowired
-    public UserService(AuthenticationManager authenticationManager, JwtUtil jwtUtil, DataSource dataSource) {
-        this.authenticationManager = authenticationManager;
-        this.jwtUtil = jwtUtil;
-        this.dataSource = dataSource;
-    }
-
-    public ResponseEntity<String> authenticateUser(String username, String password) {
-        try {
-            // Simple authentication with username and password using JDBC
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-
-            // Authentication successful, generate JWT token
-            String token = jwtUtil.generateToken(username);
-            return new ResponseEntity<>(token, HttpStatus.OK);
-        } catch (BadCredentialsException e) {
-            return new ResponseEntity<>("Invalid credentials", HttpStatus.UNAUTHORIZED);
-        }
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Users user = userRepository.findByUsername(username);
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), new ArrayList<>());
     }
 }
-
-
 
