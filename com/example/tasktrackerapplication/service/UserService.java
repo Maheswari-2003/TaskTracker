@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -69,11 +72,25 @@ public class UserService implements UserDetailsService {
 
         return convertToDTO(savedUser);
     }
-
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Users user = userRepository.findByUsername(username);
-        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), new ArrayList<>());
+        Optional<Users> userOptional = Optional.ofNullable(userRepository.findByUsername(username));
+
+        if (userOptional.isPresent()) {
+            Users user = userOptional.get();
+            return new org.springframework.security.core.userdetails.User(
+                    user.getUsername(),
+                    user.getPassword(),
+                    true, true, true, true,
+                    Collections.emptyList()
+            );
+        } else {
+            throw new UsernameNotFoundException("User not found with username: " + username);
+        }
     }
+
 }
+
+
+
 
