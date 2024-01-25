@@ -4,6 +4,7 @@ package com.example.tasktrackerapp.controller;
 
 
 import com.example.tasktrackerapp.dto.AuthRequest;
+import com.example.tasktrackerapp.dto.AuthenticationResponse;
 import com.example.tasktrackerapp.dto.UserDTO;
 import com.example.tasktrackerapp.entity.JwtUtil;
 import com.example.tasktrackerapp.service.UserService;
@@ -12,7 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
@@ -39,7 +44,6 @@ public class UserController {
         UserDTO savedUser = userService.saveUser(userDTO);
         return new ResponseEntity<>(savedUser, HttpStatus.CREATED);
     }
-    //
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -48,23 +52,31 @@ public class UserController {
 
     @GetMapping("/")
     public String welcome() {
-        return "Welcome all";
+        return "Welcome";
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<Map<String, String>> generateToken(@RequestBody AuthRequest authRequest) throws Exception {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-            );
-        } catch (Exception ex) {
-            throw new Exception("Invalid username/password");
-        }
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthRequest authenticationRequest) {
+        final Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        authenticationRequest.getUsername(),
+                        authenticationRequest.getPassword()
+                )
+        );
 
-        String token = jwtUtil.generateToken(authRequest.getUsername());
+        final UserDetails userDetails = userService.loadUserByUsername(authenticationRequest.getUsername());
+        final String token = jwtUtil.generateToken(String.valueOf(userDetails));
 
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(new AuthenticationResponse(token));
     }
+}
+
+
+
+
+
+
+
+
+
+
